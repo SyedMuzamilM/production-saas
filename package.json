@@ -1,12 +1,13 @@
 {
-  "private": true,
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "miniflare --watch",
     "build": "worktop build src/index.ts --minify",
     "pretest": "npm run build",
     "test": "uvu src .test.ts$ -r tsm -r test/setup",
-    "types": "tsc --noEmit --skipLibCheck"
+    "types": "tsc --noEmit --skipLibCheck",
+    "deploy": "wrangler publish"
   },
   "dependencies": {
     "worktop": "0.8.0-next.12"

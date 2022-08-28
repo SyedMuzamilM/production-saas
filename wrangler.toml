@@ -2,8 +2,9 @@ name = "cms-api"
 type = "javascript"
 
 # Add your account ID here
-account_id = ""
+account_id = "866cf4fdd46f3496e1c3ae4958ad2fdc"
 workers_dev = true
+compatibility_date = "2022-07-28"
 
 [build]
 command = "npm run build"
@@ -15,13 +16,16 @@ dir = "./build"
 
 [[kv_namespaces]]
 binding = "DATABASE"
-id = "802e0f5c830c45d09fcae3f506579341"
+id = "18457f77014344fabac0d596f9d2c08c"
 preview_id = "<ignored>"
 
 [vars]
 SENDGRID_EMAIL = "demo@ley.dev"
 SENDGRID_NAME = "DEMO CMS"
+STRIPE_SECRET = "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"
+SENDGRID_TOKEN = "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"
+JWT_SECRET = "secret"
 
 [miniflare]
 kv_persist = true
-env_path = ".env.dev"
+env_path = ".env"

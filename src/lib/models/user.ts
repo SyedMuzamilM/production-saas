@@ -1,19 +1,19 @@
-import { HS256 } from 'worktop/jwt';
-import * as Password from 'lib/models/password';
-import * as database from 'lib/utils/database';
-import * as emails from 'lib/sendgrid/users';
-import * as utils from 'lib/utils';
-import * as Email from './email';
+import { HS256 } from "worktop/jwt";
+import * as Password from "lib/models/password";
+import * as database from "lib/utils/database";
+import * as emails from "lib/sendgrid/users";
+import * as utils from "lib/utils";
+import * as Email from "./email";
 
-import * as Prices from 'lib/stripe/prices';
-import * as Customers from 'lib/stripe/customers';
-import * as Subscriptions from 'lib/stripe/subscriptions';
+import * as Prices from "lib/stripe/prices";
+import * as Customers from "lib/stripe/customers";
+import * as Subscriptions from "lib/stripe/subscriptions";
 
-import type { UID } from 'lib/utils';
-import type { Handler } from 'lib/context';
-import type { SALT, PASSWORD } from 'lib/models/password';
-import type { Subscription } from 'lib/stripe/subscriptions';
-import type { Customer } from 'lib/stripe/customers';
+import type { UID } from "lib/utils";
+import type { Handler } from "lib/context";
+import type { SALT, PASSWORD } from "lib/models/password";
+import type { Subscription } from "lib/stripe/subscriptions";
+import type { Customer } from "lib/stripe/customers";
 
 export type UserID = UID<16>;
 
@@ -27,8 +27,8 @@ export interface User {
 	password: PASSWORD;
 	salt: SALT;
 	stripe: {
-		customer: Customer['id'];
-		subscription: Subscription['id'];
+		customer: Customer["id"];
+		subscription: Subscription["id"];
 	};
 }
 
@@ -44,8 +44,8 @@ export const toKID = (uid: UserID) => `users::${uid}`;
 export const isUID = (x: string | UserID): x is UserID => x.length === 16;
 
 export interface TokenData {
-	uid: User['uid'];
-	salt: User['salt'];
+	uid: User["uid"];
+	salt: User["salt"];
 }
 
 // The JWT factory
@@ -76,8 +76,8 @@ export function save(user: User): Promise<boolean> {
  * @NOTE Handles `password`, `salt`, and `uid` values.
  * @TODO throw w/ message instead of early returns?
  */
-type Insert = Omit<Partial<User>, 'email'|'password'> & Credentials;
-export async function insert(values: Insert): Promise<User|void> {
+type Insert = Omit<Partial<User>, "email" | "password"> & Credentials;
+export async function insert(values: Insert): Promise<User | void> {
 	// Generate a new salt & hash the original password
 	const { password, salt } = await Password.prepare(values.password);
 
@@ -93,8 +93,8 @@ export async function insert(values: Insert): Promise<User|void> {
 			documents: 0,
 			schemas: 0,
 			spaces: 0,
-		}
-	}).then(customer => {
+		},
+	}).then((customer) => {
 		if (customer) {
 			// Attach the FREE PLAN to the new customer
 			return Subscriptions.create(customer.id, [Prices.FREE.id]);
@@ -119,10 +119,10 @@ export async function insert(values: Insert): Promise<User|void> {
 	};
 
 	// Create the new User record
-	if (!await save(user)) return;
+	if (!(await save(user))) return;
 
 	// Create public-facing "emails::" key for login
-	if (!await Email.save(user)) return;
+	if (!(await Email.save(user))) return;
 
 	// Send "welcome" email
 	await emails.welcome(user);
@@ -134,8 +134,8 @@ export async function insert(values: Insert): Promise<User|void> {
  * Format a User's full name
  */
 export function fullname(user: User): string {
-	let name = user.firstname || '';
-	if (user.lastname) name += ' ' + user.lastname;
+	let name = user.firstname || "";
+	if (user.lastname) name += " " + user.lastname;
 	return name;
 }
 
@@ -144,8 +144,11 @@ export function fullname(user: User): string {
  * @NOTE Handles `password`, `salt`, and `uid` values.
  * @TODO Implement email sender for email/password changes.
  */
-type UserChanges = Partial<Omit<User, 'password'> & { password: string }>;
-export async function update(user: User, changes: UserChanges): Promise<User|void> {
+type UserChanges = Partial<Omit<User, "password"> & { password: string }>;
+export async function update(
+	user: User,
+	changes: UserChanges
+): Promise<User | void> {
 	const hasPassword = changes.password && changes.password !== user.password;
 	const prevFullname = fullname(user);
 	const prevEmail = user.email;
@@ -163,13 +166,10 @@ export async function update(user: User, changes: UserChanges): Promise<User|voi
 		user.salt = sanitized.salt;
 	}
 
-	if (!await save(user)) return;
+	if (!(await save(user))) return;
 
 	if (user.email !== prevEmail) {
-		await Promise.all([
-			Email.remove(prevEmail),
-			Email.save(user),
-		]);
+		await Promise.all([Email.remove(prevEmail), Email.save(user)]);
 
 		// Send "email changed" alert
 		await emails.contact(prevEmail);
@@ -215,12 +215,12 @@ export async function respond(code: number, user: User): Promise<Response> {
  * Identifies a User via incoming `Authorization` header.
  */
 export const authenticate: Handler = async function (req, context) {
-	let auth = req.headers.get('authorization');
-	if (!auth) return utils.reply(401, 'Missing Authorization header');
+	let auth = req.headers.get("authorization");
+	if (!auth) return utils.reply(401, "Missing Authorization header");
 
 	let [schema, token] = auth.split(/\s+/);
-	if (!token || schema.toLowerCase() !== 'bearer') {
-		return utils.reply(401, 'Invalid Authorization format');
+	if (!token || schema.toLowerCase() !== "bearer") {
+		return utils.reply(401, "Invalid Authorization format");
 	}
 
 	try {
@@ -234,8 +234,8 @@ export const authenticate: Handler = async function (req, context) {
 	// NOTE: user salt changes w/ password
 	// AKA, mismatched salt is forgery or pre-reset token
 	if (!user || payload.salt !== user.salt) {
-		return utils.reply(401, 'Invalid token');
+		return utils.reply(401, "Invalid token");
 	}
 
 	context.user = user;
-}
+};

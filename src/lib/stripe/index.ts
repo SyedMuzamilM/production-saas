@@ -1,23 +1,25 @@
 // Added via wrangler secret
 const Authorization = `Bearer ${STRIPE_SECRET}`;
-const STRIPE_API = 'https://api.stripe.com/v1';
+const STRIPE_API = "https://api.stripe.com/v1";
 
 /**
  * Nested `URLSearchParams` support
  * @example { a: { x:1, y:2 } } => a[x]=1&a[y]=2
  */
 function encode(input: Dict<any>, prefix: string, output?: URLSearchParams) {
-	output = output || new URLSearchParams;
-	let tmp, k, pfx = prefix ? (prefix + '[') : '';
+	output = output || new URLSearchParams();
+	let tmp,
+		k,
+		pfx = prefix ? prefix + "[" : "";
 
 	for (let key in input) {
 		tmp = input[key];
 
 		k = pfx + key;
-		if (pfx) k += ']';
+		if (pfx) k += "]";
 
 		// TODO: handle Array separately
-		if (tmp && typeof tmp === 'object') {
+		if (tmp && typeof tmp === "object") {
 			encode(tmp, k, output);
 		} else if (tmp !== void 0) {
 			output.append(k, tmp);
@@ -27,19 +29,23 @@ function encode(input: Dict<any>, prefix: string, output?: URLSearchParams) {
 	return output;
 }
 
-export function send<T>(method: string, pathname: string, body?: string | Dict<any>): Promise<T|void> {
+export function send<T>(
+	method: string,
+	pathname: string,
+	body?: string | Dict<any>
+): Promise<T | void> {
 	const headers: Dict<string> = { Authorization };
 	const options: RequestInit = { method, headers };
 
 	if (body != null) {
-		headers['Content-Type'] = 'application/x-www-form-urlencoded';
-		options.body = typeof body === 'string' ? body : encode(body, '');
+		headers["Content-Type"] = "application/x-www-form-urlencoded";
+		options.body = typeof body === "string" ? body : encode(body, "");
 	}
 
 	// strip any leading "/" characters
-	pathname = pathname.replace(/^[/]+/, '');
-	return fetch(`${STRIPE_API}/${pathname}`, options).then(r => {
-		if (r.ok) return r.json() as Promise<T>;
+	pathname = pathname.replace(/^[/]+/, "");
+	return fetch(`${STRIPE_API}/${pathname}`, options).then((r) => {
+		if (r.ok) return r.json() as Promise<T>;
 	});
 }
 
